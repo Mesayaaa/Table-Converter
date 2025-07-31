@@ -1,84 +1,74 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { useLanguage } from "@/hooks/useLanguage"
+import { useState, useCallback, useRef } from "react"
 import type { HistoryState } from "@/lib/types"
 
 export const useTableHistory = () => {
   const [history, setHistory] = useState<HistoryState[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
-  const [isUndoRedoOperation, setIsUndoRedoOperation] = useState(false)
-  const { toast } = useToast()
-  const { t } = useLanguage()
+  const isUndoRedoOperation = useRef(false)
 
   const saveToHistory = useCallback(
-    (newTableData: string[][], newInputData: string) => {
-      if (isUndoRedoOperation) return
+    (tableData: string[][], inputData: string) => {
+      if (isUndoRedoOperation.current) {
+        isUndoRedoOperation.current = false
+        return
+      }
 
       const newState: HistoryState = {
-        tableData: JSON.parse(JSON.stringify(newTableData)),
-        inputData: newInputData,
+        tableData: JSON.parse(JSON.stringify(tableData)),
+        inputData,
         timestamp: Date.now(),
       }
 
       setHistory((prev) => {
         const newHistory = prev.slice(0, historyIndex + 1)
         newHistory.push(newState)
+
+        // Keep only last 50 states
         if (newHistory.length > 50) {
           newHistory.shift()
+          setHistoryIndex(newHistory.length - 1)
           return newHistory
         }
+
+        setHistoryIndex(newHistory.length - 1)
         return newHistory
       })
-
-      setHistoryIndex((prev) => prev + 1)
     },
-    [historyIndex, isUndoRedoOperation],
+    [historyIndex],
   )
 
-  const handleUndo = useCallback(() => {
+  const handleUndo = useCallback((): HistoryState | null => {
     if (historyIndex > 0) {
-      setIsUndoRedoOperation(true)
-      const prevState = history[historyIndex - 1]
-      setHistoryIndex((prev) => prev - 1)
-      setTimeout(() => setIsUndoRedoOperation(false), 0)
-      toast({
-        title: t("messages.undone"),
-        description: t("messages.undoneDesc"),
-      })
-      return prevState
+      isUndoRedoOperation.current = true
+      setHistoryIndex(historyIndex - 1)
+      return history[historyIndex - 1]
     }
     return null
-  }, [history, historyIndex, toast, t])
+  }, [history, historyIndex])
 
-  const handleRedo = useCallback(() => {
+  const handleRedo = useCallback((): HistoryState | null => {
     if (historyIndex < history.length - 1) {
-      setIsUndoRedoOperation(true)
-      const nextState = history[historyIndex + 1]
-      setHistoryIndex((prev) => prev + 1)
-      setTimeout(() => setIsUndoRedoOperation(false), 0)
-      toast({
-        title: t("messages.redone"),
-        description: t("messages.redoneDesc"),
-      })
-      return nextState
+      isUndoRedoOperation.current = true
+      setHistoryIndex(historyIndex + 1)
+      return history[historyIndex + 1]
     }
     return null
-  }, [history, historyIndex, toast, t])
+  }, [history, historyIndex])
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     setHistory([])
     setHistoryIndex(-1)
-  }
+  }, [])
 
   return {
     history,
     historyIndex,
-    isUndoRedoOperation,
     saveToHistory,
     handleUndo,
     handleRedo,
     clearHistory,
+    isUndoRedoOperation: isUndoRedoOperation.current,
   }
 }

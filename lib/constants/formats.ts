@@ -1,15 +1,70 @@
-import type { Format } from "../types"
+import type { FormatInfo } from "@/lib/types"
 
-export const formats: Format[] = [
-  { value: "csv", label: "CSV", icon: "📊", extension: "csv", mimeType: "text/csv" },
-  { value: "tsv", label: "TSV", icon: "📋", extension: "tsv", mimeType: "text/tab-separated-values" },
-  { value: "html", label: "HTML", icon: "🌐", extension: "html", mimeType: "text/html" },
-  { value: "excel", label: "Excel", icon: "📈", extension: "csv", mimeType: "text/csv" },
-  { value: "markdown", label: "Markdown", icon: "📝", extension: "md", mimeType: "text/markdown" },
-  { value: "latex", label: "LaTeX", icon: "📄", extension: "tex", mimeType: "text/plain" },
-  { value: "sql", label: "SQL", icon: "🗄️", extension: "sql", mimeType: "text/plain" },
-  { value: "json", label: "JSON", icon: "🔧", extension: "json", mimeType: "application/json" },
-  { value: "yaml", label: "YAML", icon: "⚙️", extension: "yml", mimeType: "text/yaml" },
-  { value: "xml", label: "XML", icon: "📰", extension: "xml", mimeType: "text/xml" },
-  { value: "ascii", label: "ASCII", icon: "💻", extension: "txt", mimeType: "text/plain" },
+export const formats: FormatInfo[] = [
+  {
+    value: "csv",
+    label: "CSV",
+    extension: "csv",
+    mimeType: "text/csv",
+  },
+  {
+    value: "tsv",
+    label: "TSV",
+    extension: "tsv",
+    mimeType: "text/tab-separated-values",
+  },
+  {
+    value: "json",
+    label: "JSON",
+    extension: "json",
+    mimeType: "application/json",
+  },
+  {
+    value: "html",
+    label: "HTML Table",
+    extension: "html",
+    mimeType: "text/html",
+  },
+  {
+    value: "markdown",
+    label: "Markdown",
+    extension: "md",
+    mimeType: "text/markdown",
+  },
+  {
+    value: "xml",
+    label: "XML",
+    extension: "xml",
+    mimeType: "application/xml",
+  },
+  {
+    value: "yaml",
+    label: "YAML",
+    extension: "yaml",
+    mimeType: "application/x-yaml",
+  },
+  {
+    value: "sql",
+    label: "SQL Insert",
+    extension: "sql",
+    mimeType: "application/sql",
+  },
+  {
+    value: "latex",
+    label: "LaTeX",
+    extension: "tex",
+    mimeType: "application/x-latex",
+  },
+  {
+    value: "ascii",
+    label: "ASCII Table",
+    extension: "txt",
+    mimeType: "text/plain",
+  },
+  {
+    value: "excel",
+    label: "Excel Formula",
+    extension: "txt",
+    mimeType: "text/plain",
+  },
 ]

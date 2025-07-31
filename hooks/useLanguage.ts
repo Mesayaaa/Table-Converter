@@ -1,38 +1,39 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { translations, type Language } from "@/lib/i18n/translations"
+import { useState, useCallback } from "react"
+import { translations } from "@/lib/i18n/translations"
+
+type Language = "en" | "id"
 
 export const useLanguage = () => {
-  const [language, setLanguage] = useState<Language>("ja")
+  const [currentLanguage, setCurrentLanguage] = useState<Language>("en")
 
-  useEffect(() => {
-    // ブラウザの言語設定を取得
-    const browserLang = navigator.language.toLowerCase()
-    setLanguage("en")
+  const t = useCallback(
+    (key: string): string => {
+      const keys = key.split(".")
+      let value: any = translations[currentLanguage]
+
+      for (const k of keys) {
+        value = value?.[k]
+      }
+
+      return value || key
+    },
+    [currentLanguage],
+  )
+
+  const toggleLanguage = useCallback(() => {
+    setCurrentLanguage((prev) => (prev === "en" ? "id" : "en"))
   }, [])
 
-  const t = (key: string, ...args: any[]): string => {
-    const keys = key.split(".")
-    let value: any = translations[language]
+  const setLanguage = useCallback((lang: Language) => {
+    setCurrentLanguage(lang)
+  }, [])
 
-    for (const k of keys) {
-      value = value?.[k]
-    }
-
-    if (typeof value === "string") {
-      // 引数がある場合は置換
-      return args.reduce((str, arg, index) => {
-        return str.replace(`{${index}}`, arg)
-      }, value)
-    }
-
-    return key // キーが見つからない場合はキー自体を返す
+  return {
+    currentLanguage,
+    t,
+    toggleLanguage,
+    setLanguage,
   }
-
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "ja" ? "en" : "ja"))
-  }
-
-  return { language, setLanguage, t, toggleLanguage }
 }

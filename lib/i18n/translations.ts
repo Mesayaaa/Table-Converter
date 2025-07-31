@@ -1,168 +1,64 @@
 export const translations = {
-  ja: {
-    title: "カンタン表変換",
-    subtitle: "11種類のフォーマットに対応した高機能テーブル変換・編集ツール",
-    features: {
-      formats: "11フォーマット対応",
-      formatsDesc: "CSV, TSV, HTML, Excel, Markdown, LaTeX, SQL, JSON, YAML, XML, ASCIIに対応",
-      sorting: "行・列ソート&並べ替え",
-      sortingDesc: "ドラッグ&ドロップで行・列の順序を変更できます",
-      search: "全文検索・フィルタ",
-      searchDesc: "テーブル内容を検索してフィルタリングできます",
-    },
-    steps: {
-      step1: "テーブル貼り付け/ファイル選択",
-      step2: "変換",
-      step3: "編集/プレビューで出力を編集",
-    },
-    panels: {
-      input: "入力・編集",
-      output: "変換結果",
-      inputTab: "入力",
-      previewTab: "編集/プレビュー",
-    },
-    buttons: {
-      sample: "サンプル",
-      fileSelect: "ファイル選択",
-      clear: "クリア",
-      filter: "フィルター",
-      undo: "元に戻す",
-      redo: "やり直し",
-      close: "閉じる",
-      copy: "コピー",
-      copied: "コピー済み",
-      download: "ダウンロード",
-      format: "フォーマット",
-    },
-    placeholders: {
-      inputData: "形式のテーブルデータを貼り付けてください...",
-      filter: "フィルター...",
-      output: "形式の出力がここに表示されます...",
-    },
-    messages: {
-      cellUpdated: "セルを更新しました",
-      cellUpdatedDesc: "セルの内容が正常に更新されました",
-      rowAdded: "行を追加しました",
-      rowAddedDesc: "行目に新しい行を追加しました",
-      columnAdded: "列を追加しました",
-      columnAddedDesc: "列目に新しい列を追加しました",
-      rowDeleted: "行を削除しました",
-      rowDeletedDesc: "行目を削除しました",
-      columnDeleted: "列を削除しました",
-      columnDeletedDesc: "列目を削除しました",
-      cannotDelete: "削除できません",
-      cannotDeleteHeader: "ヘッダー行は削除できません",
-      cannotDeleteLastColumn: "最後の列は削除できません",
-      copied: "コピーしました",
-      copiedDesc: "形式でクリップボードにコピーしました",
-      copyFailed: "コピーに失敗しました",
-      copyFailedDesc: "クリップボードへのアクセスができませんでした",
-      downloaded: "ダウンロードしました",
-      downloadedDesc: "形式でファイルをダウンロードしました",
-      undone: "操作を元に戻しました",
-      undoneDesc: "前の状態に戻りました",
-      redone: "操作をやり直しました",
-      redoneDesc: "次の状態に進みました",
-      parseError: "パース エラー",
-      parseErrorDesc: "形式の解析に失敗しました。形式を確認してください。",
-    },
-    selection: {
-      single: "1セル選択中",
-      multiple: "セル選択中",
-    },
-    contextMenu: {
-      addRowAbove: "上に行を追加",
-      addRowBelow: "下に行を追加",
-      addColumnLeft: "左に列を追加",
-      addColumnRight: "右に列を追加",
-      deleteRow: "行を削除",
-      deleteColumn: "列を削除",
-      newColumn: "新しい列",
-    },
-    howToUse: {
-      title: "使用方法",
-      step1Title: "データを入力",
-      step1Desc:
-        "11種類のフォーマット（CSV, TSV, HTML, Excel, Markdown, LaTeX, SQL, JSON, YAML, XML, ASCII）のテーブルデータを貼り付けるか、ファイルをアップロードしてください。",
-      step2Title: "編集・プレビュー",
-      step2Desc:
-        "編集/プレビュータブでデータを確認し、セル選択・編集、行・列の追加・削除、並び替えやフィルタリング、テーブルのリサイズを行います。",
-      step3Title: "変換・出力",
-      step3Desc:
-        "右側のタブから希望のフォーマットを選択し、変換結果をコピーまたはダウンロードします。UNDO・REDO機能で操作を取り消すことも可能です。",
-    },
-  },
   en: {
     title: "Easy Table Converter",
-    subtitle: "Advanced table conversion and editing tool supporting 11 formats",
-    features: {
-      formats: "11 Formats Supported",
-      formatsDesc: "Supports CSV, TSV, HTML, Excel, Markdown, LaTeX, SQL, JSON, YAML, XML, ASCII",
-      sorting: "Row/Column Sort & Reorder",
-      sortingDesc: "Drag and drop to reorder rows and columns",
-      search: "Full-text Search & Filter",
-      searchDesc: "Search and filter table contents",
-    },
+    subtitle: "Convert tables between different formats with ease",
+    description: "Transform your data between CSV, JSON, HTML, Markdown, and more formats instantly",
+
+    // Navigation & Steps
     steps: {
-      step1: "Paste Table/Select File",
-      step2: "Convert",
-      step3: "Edit/Preview Output",
+      input: "Input Data",
+      preview: "Preview & Edit",
+      output: "Generate Output",
     },
+
+    // Panels
     panels: {
-      input: "Input & Edit",
-      output: "Conversion Results",
+      input: "Data Input",
       inputTab: "Input",
-      previewTab: "Edit/Preview",
+      previewTab: "Preview",
+      output: "Output & Export",
+      templates: "Templates",
+      saved: "Saved Tables",
+      share: "Share & Export",
     },
+
+    // Labels
+    labels: {
+      inputFormat: "Input Format",
+      outputFormat: "Output Format",
+      inputData: "Input Data",
+      output: "Generated Output",
+      fileName: "File Name",
+      tableScale: "Table Scale",
+      filterData: "Filter Data",
+      searchPlaceholder: "Search in table...",
+    },
+
+    // Buttons
     buttons: {
-      sample: "Sample",
-      fileSelect: "Select File",
-      clear: "Clear",
-      filter: "Filter",
+      sampleData: "Load Sample",
+      clear: "Clear All",
+      uploadFile: "Upload File",
+      copy: "Copy",
+      copied: "Copied!",
+      download: "Download",
+      save: "Save Table",
+      load: "Load Table",
+      delete: "Delete",
+      share: "Share",
+      export: "Export",
       undo: "Undo",
       redo: "Redo",
+      expandTable: "Expand Table",
       close: "Close",
-      copy: "Copy",
-      copied: "Copied",
-      download: "Download",
-      format: "Format",
+      useTemplate: "Use Template",
+      saveAs: "Save As",
+      generateLink: "Generate Link",
+      copyLink: "Copy Link",
+      downloadQR: "Download QR Code",
     },
-    placeholders: {
-      inputData: " format table data here...",
-      filter: "Filter...",
-      output: " format output will be displayed here...",
-    },
-    messages: {
-      cellUpdated: "Cell Updated",
-      cellUpdatedDesc: "Cell content has been successfully updated",
-      rowAdded: "Row Added",
-      rowAddedDesc: "New row added at position ",
-      columnAdded: "Column Added",
-      columnAddedDesc: "New column added at position ",
-      rowDeleted: "Row Deleted",
-      rowDeletedDesc: "Row deleted at position ",
-      columnDeleted: "Column Deleted",
-      columnDeletedDesc: "Column deleted at position ",
-      cannotDelete: "Cannot Delete",
-      cannotDeleteHeader: "Cannot delete header row",
-      cannotDeleteLastColumn: "Cannot delete the last column",
-      copied: "Copied",
-      copiedDesc: " format copied to clipboard",
-      copyFailed: "Copy Failed",
-      copyFailedDesc: "Could not access clipboard",
-      downloaded: "Downloaded",
-      downloadedDesc: " format file downloaded",
-      undone: "Undone",
-      undoneDesc: "Reverted to previous state",
-      redone: "Redone",
-      redoneDesc: "Advanced to next state",
-      parseError: "Parse Error",
-      parseErrorDesc: " format parsing failed. Please check the format.",
-    },
-    selection: {
-      single: "1 cell selected",
-      multiple: " cells selected",
-    },
+
+    // Context Menu
     contextMenu: {
       addRowAbove: "Add Row Above",
       addRowBelow: "Add Row Below",
@@ -172,20 +68,280 @@ export const translations = {
       deleteColumn: "Delete Column",
       newColumn: "New Column",
     },
+
+    // Messages
+    messages: {
+      parseError: "Parse Error",
+      parseErrorDesc: "format could not be parsed correctly",
+      copied: "Copied to Clipboard",
+      copiedDesc: "format has been copied to clipboard",
+      copyFailed: "Copy Failed",
+      copyFailedDesc: "Failed to copy to clipboard",
+      downloaded: "File Downloaded",
+      downloadedDesc: "format file has been downloaded",
+      saved: "Table Saved",
+      savedDesc: "Your table has been saved successfully",
+      loaded: "Table Loaded",
+      loadedDesc: "Table has been loaded successfully",
+      deleted: "Table Deleted",
+      deletedDesc: "Table has been deleted successfully",
+      shared: "Link Generated",
+      sharedDesc: "Shareable link has been generated",
+      cellUpdated: "Cell Updated",
+      cellUpdatedDesc: "Cell value has been updated",
+      rowAdded: "Row Added",
+      rowAddedDesc: "Row has been added at position",
+      columnAdded: "Column Added",
+      columnAddedDesc: "Column has been added at position",
+      rowDeleted: "Row Deleted",
+      rowDeletedDesc: "Row has been deleted at position",
+      columnDeleted: "Column Deleted",
+      columnDeletedDesc: "Column has been deleted at position",
+      cannotDelete: "Cannot Delete",
+      cannotDeleteHeader: "Cannot delete the header row",
+      cannotDeleteLastColumn: "Cannot delete the last column",
+      noData: "No data to display",
+      invalidFormat: "Invalid format",
+      fileTooBig: "File too large",
+      unsupportedFile: "Unsupported file type",
+    },
+
+    // Placeholders
+    placeholders: {
+      inputData: "Paste your table data here or use sample data...",
+      noData: "No data available. Please input some data first.",
+      fileName: "Enter file name...",
+      tableName: "Enter table name...",
+    },
+
+    // Templates
+    templates: {
+      business: {
+        name: "Business Report",
+        description: "Quarterly business performance data",
+      },
+      financial: {
+        name: "Financial Data",
+        description: "Revenue and expense tracking",
+      },
+      inventory: {
+        name: "Inventory List",
+        description: "Product inventory management",
+      },
+      employees: {
+        name: "Employee Directory",
+        description: "Staff information and contacts",
+      },
+      sales: {
+        name: "Sales Report",
+        description: "Monthly sales performance",
+      },
+      projects: {
+        name: "Project Timeline",
+        description: "Project milestones and deadlines",
+      },
+    },
+
+    // How to Use
     howToUse: {
       title: "How to Use",
-      step1Title: "Input Data",
-      step1Desc:
-        "Paste table data in any of the 11 supported formats (CSV, TSV, HTML, Excel, Markdown, LaTeX, SQL, JSON, YAML, XML, ASCII) or upload a file.",
-      step2Title: "Edit & Preview",
-      step2Desc:
-        "Use the Edit/Preview tab to review data, select and edit cells, add/delete rows and columns, sort, filter, and resize the table.",
-      step3Title: "Convert & Output",
-      step3Desc:
-        "Select your desired format from the tabs on the right and copy or download the conversion results. Use UNDO/REDO functions to revert operations.",
+      step1: {
+        title: "Choose Input Format",
+        description: "Select the format of your source data (CSV, JSON, HTML, etc.)",
+      },
+      step2: {
+        title: "Input Your Data",
+        description: "Paste your data, upload a file, or use sample data",
+      },
+      step3: {
+        title: "Preview & Edit",
+        description: "Review your data in table format and make edits if needed",
+      },
+      step4: {
+        title: "Convert & Export",
+        description: "Choose output format and copy or download the result",
+      },
+    },
+
+    // Statistics
+    stats: {
+      rows: "Rows",
+      columns: "Columns",
+      characters: "Characters",
+      cells: "Cells",
+    },
+  },
+
+  id: {
+    title: "Konverter Tabel Mudah",
+    subtitle: "Konversi tabel antar format dengan mudah",
+    description: "Ubah data Anda antara format CSV, JSON, HTML, Markdown, dan lainnya secara instan",
+
+    // Navigation & Steps
+    steps: {
+      input: "Input Data",
+      preview: "Preview & Edit",
+      output: "Generate Output",
+    },
+
+    // Panels
+    panels: {
+      input: "Input Data",
+      inputTab: "Input",
+      previewTab: "Preview",
+      output: "Output & Ekspor",
+      templates: "Template",
+      saved: "Tabel Tersimpan",
+      share: "Bagikan & Ekspor",
+    },
+
+    // Labels
+    labels: {
+      inputFormat: "Format Input",
+      outputFormat: "Format Output",
+      inputData: "Data Input",
+      output: "Output yang Dihasilkan",
+      fileName: "Nama File",
+      tableScale: "Skala Tabel",
+      filterData: "Filter Data",
+      searchPlaceholder: "Cari dalam tabel...",
+    },
+
+    // Buttons
+    buttons: {
+      sampleData: "Muat Contoh",
+      clear: "Hapus Semua",
+      uploadFile: "Upload File",
+      copy: "Salin",
+      copied: "Tersalin!",
+      download: "Unduh",
+      save: "Simpan Tabel",
+      load: "Muat Tabel",
+      delete: "Hapus",
+      share: "Bagikan",
+      export: "Ekspor",
+      undo: "Urungkan",
+      redo: "Ulangi",
+      expandTable: "Perluas Tabel",
+      close: "Tutup",
+      useTemplate: "Gunakan Template",
+      saveAs: "Simpan Sebagai",
+      generateLink: "Buat Link",
+      copyLink: "Salin Link",
+      downloadQR: "Unduh QR Code",
+    },
+
+    // Context Menu
+    contextMenu: {
+      addRowAbove: "Tambah Baris di Atas",
+      addRowBelow: "Tambah Baris di Bawah",
+      addColumnLeft: "Tambah Kolom Kiri",
+      addColumnRight: "Tambah Kolom Kanan",
+      deleteRow: "Hapus Baris",
+      deleteColumn: "Hapus Kolom",
+      newColumn: "Kolom Baru",
+    },
+
+    // Messages
+    messages: {
+      parseError: "Error Parsing",
+      parseErrorDesc: "format tidak dapat diparse dengan benar",
+      copied: "Tersalin ke Clipboard",
+      copiedDesc: "format telah disalin ke clipboard",
+      copyFailed: "Gagal Menyalin",
+      copyFailedDesc: "Gagal menyalin ke clipboard",
+      downloaded: "File Terunduh",
+      downloadedDesc: "file format telah diunduh",
+      saved: "Tabel Tersimpan",
+      savedDesc: "Tabel Anda telah berhasil disimpan",
+      loaded: "Tabel Dimuat",
+      loadedDesc: "Tabel telah berhasil dimuat",
+      deleted: "Tabel Dihapus",
+      deletedDesc: "Tabel telah berhasil dihapus",
+      shared: "Link Dibuat",
+      sharedDesc: "Link yang dapat dibagikan telah dibuat",
+      cellUpdated: "Sel Diperbarui",
+      cellUpdatedDesc: "Nilai sel telah diperbarui",
+      rowAdded: "Baris Ditambahkan",
+      rowAddedDesc: "Baris telah ditambahkan pada posisi",
+      columnAdded: "Kolom Ditambahkan",
+      columnAddedDesc: "Kolom telah ditambahkan pada posisi",
+      rowDeleted: "Baris Dihapus",
+      rowDeletedDesc: "Baris telah dihapus pada posisi",
+      columnDeleted: "Kolom Dihapus",
+      columnDeletedDesc: "Kolom telah dihapus pada posisi",
+      cannotDelete: "Tidak Dapat Menghapus",
+      cannotDeleteHeader: "Tidak dapat menghapus baris header",
+      cannotDeleteLastColumn: "Tidak dapat menghapus kolom terakhir",
+      noData: "Tidak ada data untuk ditampilkan",
+      invalidFormat: "Format tidak valid",
+      fileTooBig: "File terlalu besar",
+      unsupportedFile: "Tipe file tidak didukung",
+    },
+
+    // Placeholders
+    placeholders: {
+      inputData: "Tempel data tabel Anda di sini atau gunakan data contoh...",
+      noData: "Tidak ada data tersedia. Silakan input data terlebih dahulu.",
+      fileName: "Masukkan nama file...",
+      tableName: "Masukkan nama tabel...",
+    },
+
+    // Templates
+    templates: {
+      business: {
+        name: "Laporan Bisnis",
+        description: "Data performa bisnis kuartalan",
+      },
+      financial: {
+        name: "Data Keuangan",
+        description: "Pelacakan pendapatan dan pengeluaran",
+      },
+      inventory: {
+        name: "Daftar Inventori",
+        description: "Manajemen inventori produk",
+      },
+      employees: {
+        name: "Direktori Karyawan",
+        description: "Informasi dan kontak staff",
+      },
+      sales: {
+        name: "Laporan Penjualan",
+        description: "Performa penjualan bulanan",
+      },
+      projects: {
+        name: "Timeline Proyek",
+        description: "Milestone dan deadline proyek",
+      },
+    },
+
+    // How to Use
+    howToUse: {
+      title: "Cara Menggunakan",
+      step1: {
+        title: "Pilih Format Input",
+        description: "Pilih format data sumber Anda (CSV, JSON, HTML, dll.)",
+      },
+      step2: {
+        title: "Input Data Anda",
+        description: "Tempel data Anda, upload file, atau gunakan data contoh",
+      },
+      step3: {
+        title: "Preview & Edit",
+        description: "Tinjau data Anda dalam format tabel dan edit jika diperlukan",
+      },
+      step4: {
+        title: "Konversi & Ekspor",
+        description: "Pilih format output dan salin atau unduh hasilnya",
+      },
+    },
+
+    // Statistics
+    stats: {
+      rows: "Baris",
+      columns: "Kolom",
+      characters: "Karakter",
+      cells: "Sel",
     },
   },
 }
-
-export type Language = keyof typeof translations
-export type TranslationKey = keyof typeof translations.ja

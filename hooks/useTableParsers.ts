@@ -1,294 +1,298 @@
 "use client"
 
-import { useToast } from "@/hooks/use-toast"
-import { useLanguage } from "@/hooks/useLanguage"
+import { useCallback } from "react"
 
 export const useTableParsers = () => {
-  const { toast } = useToast()
-  const { t } = useLanguage()
+  const parseInputData = useCallback((data: string, format: string): string[][] => {
+    if (!data.trim()) return []
 
-  const parseCSVData = (data: string): string[][] => {
-    const lines = data.split("\n").filter((line) => line.trim())
-    return lines.map((line) => line.split(",").map((cell) => cell.trim()))
+    try {
+      switch (format) {
+        case "csv":
+          return parseCSV(data)
+        case "tsv":
+          return parseTSV(data)
+        case "json":
+          return parseJSON(data)
+        case "html":
+          return parseHTML(data)
+        case "markdown":
+          return parseMarkdown(data)
+        case "xml":
+          return parseXML(data)
+        case "yaml":
+          return parseYAML(data)
+        case "sql":
+          return parseSQL(data)
+        case "latex":
+          return parseLaTeX(data)
+        case "ascii":
+          return parseASCII(data)
+        case "excel":
+          return parseExcel(data)
+        default:
+          return parseCSV(data)
+      }
+    } catch (error) {
+      console.error(`Error parsing ${format}:`, error)
+      return []
+    }
+  }, [])
+
+  return { parseInputData }
+}
+
+const parseCSV = (data: string): string[][] => {
+  const lines = data.trim().split("\n")
+  const result: string[][] = []
+
+  for (const line of lines) {
+    const row: string[] = []
+    let current = ""
+    let inQuotes = false
+    let i = 0
+
+    while (i < line.length) {
+      const char = line[i]
+      const nextChar = line[i + 1]
+
+      if (char === '"' && !inQuotes) {
+        inQuotes = true
+      } else if (char === '"' && inQuotes) {
+        if (nextChar === '"') {
+          current += '"'
+          i++ // Skip next quote
+        } else {
+          inQuotes = false
+        }
+      } else if (char === "," && !inQuotes) {
+        row.push(current.trim())
+        current = ""
+      } else {
+        current += char
+      }
+      i++
+    }
+
+    row.push(current.trim())
+    result.push(row)
   }
 
-  const parseTSVData = (data: string): string[][] => {
-    const lines = data.split("\n").filter((line) => line.trim())
-    return lines.map((line) => line.split("\t").map((cell) => cell.trim()))
-  }
+  return result
+}
 
-  const parseHTMLData = (data: string): string[][] => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(data, "text/html")
-    const table = doc.querySelector("table")
-    if (!table) throw new Error(t("messages.parseError"))
+const parseTSV = (data: string): string[][] => {
+  return data
+    .trim()
+    .split("\n")
+    .map((line) => line.split("\t"))
+}
 
-    const rows: string[][] = []
-    const tableRows = table.querySelectorAll("tr")
+const parseJSON = (data: string): string[][] => {
+  const jsonData = JSON.parse(data)
+  if (!Array.isArray(jsonData) || jsonData.length === 0) return []
 
-    tableRows.forEach((row) => {
-      const cells = row.querySelectorAll("th, td")
-      const rowData = Array.from(cells).map((cell) => cell.textContent?.trim() || "")
-      if (rowData.length > 0) rows.push(rowData)
-    })
+  const headers = Object.keys(jsonData[0])
+  const result = [headers]
 
-    return rows
-  }
+  jsonData.forEach((item) => {
+    const row = headers.map((header) => String(item[header] || ""))
+    result.push(row)
+  })
 
-  const parseMarkdownData = (data: string): string[][] => {
-    const lines = data.split("\n").filter((line) => line.trim() && line.includes("|"))
-    const rows: string[][] = []
+  return result
+}
 
-    lines.forEach((line) => {
-      if (line.includes("---")) return
+const parseHTML = (data: string): string[][] => {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(data, "text/html")
+  const table = doc.querySelector("table")
 
+  if (!table) return []
+
+  const result: string[][] = []
+  const rows = table.querySelectorAll("tr")
+
+  rows.forEach((row) => {
+    const cells = row.querySelectorAll("th, td")
+    const rowData = Array.from(cells).map((cell) => cell.textContent?.trim() || "")
+    if (rowData.length > 0) {
+      result.push(rowData)
+    }
+  })
+
+  return result
+}
+
+const parseMarkdown = (data: string): string[][] => {
+  const lines = data.trim().split("\n")
+  const result: string[][] = []
+
+  for (const line of lines) {
+    if (line.includes("|")) {
       const cells = line
         .split("|")
         .map((cell) => cell.trim())
-        .filter((cell) => cell !== "")
+        .filter((cell, index, arr) => {
+          // Remove empty cells at start and end
+          return !(index === 0 && cell === "") && !(index === arr.length - 1 && cell === "")
+        })
 
-      if (cells.length > 0) rows.push(cells)
+      // Skip separator lines (containing only dashes and pipes)
+      if (!cells.every((cell) => /^-+$/.test(cell))) {
+        result.push(cells)
+      }
+    }
+  }
+
+  return result
+}
+
+const parseXML = (data: string): string[][] => {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(data, "text/xml")
+  const rows = doc.querySelectorAll("row")
+
+  if (rows.length === 0) return []
+
+  // Get headers from first row
+  const firstRow = rows[0]
+  const headers = Array.from(firstRow.children).map((child) => child.tagName)
+  const result = [headers]
+
+  // Get data from all rows
+  rows.forEach((row) => {
+    const rowData = headers.map((header) => {
+      const element = row.querySelector(header)
+      return element?.textContent?.trim() || ""
     })
+    result.push(rowData)
+  })
 
-    return rows
-  }
+  return result
+}
 
-  const parseLaTeXData = (data: string): string[][] => {
-    const rows: string[][] = []
-    const lines = data.split("\n")
+const parseYAML = (data: string): string[][] => {
+  // Simple YAML parser for array of objects
+  const lines = data.trim().split("\n")
+  const items: Record<string, string>[] = []
+  let currentItem: Record<string, string> = {}
 
-    let inTable = false
-    for (const line of lines) {
-      if (line.includes("\\begin{tabular}")) {
-        inTable = true
-        continue
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed.startsWith("- ")) {
+      if (Object.keys(currentItem).length > 0) {
+        items.push(currentItem)
       }
-      if (line.includes("\\end{tabular}")) break
-      if (line.includes("\\hline")) continue
-
-      if (inTable && line.trim()) {
-        const cells = line.split("&").map((cell) => cell.replace(/\\\\/g, "").trim())
-        if (cells.length > 0 && cells[0] !== "") {
-          rows.push(cells)
-        }
+      currentItem = {}
+      const keyValue = trimmed.substring(2).split(":")
+      if (keyValue.length === 2) {
+        currentItem[keyValue[0].trim()] = keyValue[1].trim()
+      }
+    } else if (trimmed.includes(":")) {
+      const keyValue = trimmed.split(":")
+      if (keyValue.length === 2) {
+        currentItem[keyValue[0].trim()] = keyValue[1].trim()
       }
     }
-
-    return rows
   }
 
-  const parseSQLData = (text: string): string[][] => {
-    if (!/^INSERT\s+INTO/i.test(text)) return []
-
-    // 複数レコードを含む INSERT 文が連なっているケース
-    const insertStmts = text.match(/INSERT\s+INTO[^(]+$$[^)]+$$\s+VALUES\s*$$[^)]+$$;?/gi)
-    if (insertStmts?.length) {
-      let header: string[] | null = null
-      const rows: string[][] = []
-
-      insertStmts.forEach((stmt) => {
-        const m = stmt.match(/^INSERT\s+INTO\s+\S+\s*$$([^)]+)$$\s*VALUES\s*$$([^)]+)$$;?$/i)
-        if (m) {
-          const cols = m[1].split(",").map((c) => c.trim().replace(/^"|"$/g, ""))
-          const vals = m[2]
-            .split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
-            .map((v) => v.trim().replace(/^'/, "").replace(/'$/, ""))
-          if (!header) header = cols
-          rows.push(vals)
-        }
-      })
-
-      if (header) return [header, ...rows]
-    }
-
-    // 1 本の INSERT 文で複数 VALUES のパターン
-    const colMatch = text.match(/^INSERT\s+INTO\s+\S+\s*$$([^)]+)$$\s*VALUES\s*(.+);?$/i)
-    if (colMatch) {
-      const cols = colMatch[1].split(",").map((c) => c.trim().replace(/^"|"$/g, ""))
-      const valsPart = colMatch[2].trim().replace(/;$/, "")
-      const valGroups = valsPart
-        .replace(/^$$/, "")
-        .replace(/$$$/, "")
-        .split(/\)\s*,\s*\(/)
-
-      const rows: string[][] = [cols]
-      valGroups.forEach((grp) => {
-        const cells = grp.split(/,(?=(?:[^']*'[^']*')*[^']*$)/).map((v) => v.trim().replace(/^'/, "").replace(/'$/, ""))
-        rows.push(cells)
-      })
-      return rows
-    }
-
-    // VALUES (...) だけが羅列されているケース
-    const groups = Array.from(text.matchAll(/$$([^)]*)$$/g)).map((m) => m[1])
-    if (groups.length) {
-      const rows: string[][] = []
-      groups.forEach((grp) => {
-        const cells = grp.split(/,(?=(?:[^']*'[^']*')*[^']*$)/).map((v) => v.trim().replace(/^'/, "").replace(/'$/, ""))
-        rows.push(cells)
-      })
-      return rows
-    }
-
-    return []
+  if (Object.keys(currentItem).length > 0) {
+    items.push(currentItem)
   }
 
-  const parseJSONData = (data: string): string[][] => {
-    const jsonData = JSON.parse(data)
-    if (!Array.isArray(jsonData) || jsonData.length === 0) {
-      throw new Error(t("messages.parseError"))
-    }
+  if (items.length === 0) return []
 
-    const headers = Object.keys(jsonData[0])
-    const rows: string[][] = [headers]
+  const headers = Object.keys(items[0])
+  const result = [headers]
 
-    jsonData.forEach((item) => {
-      const row = headers.map((header) => String(item[header] || ""))
-      rows.push(row)
+  items.forEach((item) => {
+    const row = headers.map((header) => item[header] || "")
+    result.push(row)
+  })
+
+  return result
+}
+
+const parseSQL = (data: string): string[][] => {
+  // Extract table name and columns from INSERT statement
+  const insertMatch = data.match(/INSERT\s+INTO\s+(\w+)\s*$$([^)]+)$$\s+VALUES/i)
+  if (!insertMatch) return []
+
+  const columns = insertMatch[2].split(",").map((col) => col.trim())
+  const result = [columns]
+
+  // Extract values
+  const valuesMatch = data.match(/VALUES\s*(.*);?/is)
+  if (!valuesMatch) return result
+
+  const valuesString = valuesMatch[1]
+  const valueRows = valuesString.split(/\),\s*\(/)
+
+  valueRows.forEach((row) => {
+    const cleanRow = row.replace(/^$$|$$$/g, "")
+    const values = cleanRow.split(",").map((val) => {
+      return val.trim().replace(/^'|'$/g, "")
     })
+    result.push(values)
+  })
 
-    return rows
-  }
+  return result
+}
 
-  const parseYAMLData = (data: string): string[][] => {
-    const lines = data.split("\n").filter((line) => line.trim())
-    const items: any[] = []
-    let currentItem: any = {}
+const parseLaTeX = (data: string): string[][] => {
+  const lines = data.split("\n")
+  const result: string[][] = []
 
-    for (const line of lines) {
-      if (line.startsWith("- ")) {
-        if (Object.keys(currentItem).length > 0) {
-          items.push(currentItem)
-        }
-        currentItem = {}
-        const keyValue = line.substring(2).split(":")
-        if (keyValue.length === 2) {
-          currentItem[keyValue[0].trim()] = keyValue[1].trim()
-        }
-      } else if (line.includes(":")) {
-        const keyValue = line.split(":")
-        if (keyValue.length === 2) {
-          currentItem[keyValue[0].trim()] = keyValue[1].trim()
-        }
-      }
-    }
-
-    if (Object.keys(currentItem).length > 0) {
-      items.push(currentItem)
-    }
-
-    if (items.length === 0) throw new Error(t("messages.parseError"))
-
-    const headers = Object.keys(items[0])
-    const rows: string[][] = [headers]
-
-    items.forEach((item) => {
-      const row = headers.map((header) => String(item[header] || ""))
-      rows.push(row)
-    })
-
-    return rows
-  }
-
-  const parseXMLData = (data: string): string[][] => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(data, "text/xml")
-    const records = doc.querySelectorAll("record")
-
-    if (records.length === 0) throw new Error(t("messages.parseError"))
-
-    const headers: string[] = []
-    const firstRecord = records[0]
-    firstRecord.childNodes.forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        headers.push(node.nodeName)
-      }
-    })
-
-    const rows: string[][] = [headers]
-
-    records.forEach((record) => {
-      const row: string[] = []
-      headers.forEach((header) => {
-        const element = record.querySelector(header)
-        row.push(element?.textContent?.trim() || "")
-      })
-      rows.push(row)
-    })
-
-    return rows
-  }
-
-  const parseASCIIData = (data: string): string[][] => {
-    const lines = data.split("\n").filter((line) => line.trim())
-    const rows: string[][] = []
-
-    for (const line of lines) {
-      if (line.startsWith("+") || line.trim() === "") continue
-
-      if (line.startsWith("|")) {
-        const cells = line
-          .split("|")
-          .map((cell) => cell.trim())
-          .filter((cell) => cell !== "")
-
-        if (cells.length > 0) {
-          rows.push(cells)
-        }
-      }
-    }
-
-    return rows
-  }
-
-  const parseInputData = (data: string, format: string): string[][] => {
-    try {
-      let result: string[][] = []
-      switch (format) {
-        case "csv":
-        case "excel":
-          result = parseCSVData(data)
-          break
-        case "tsv":
-          result = parseTSVData(data)
-          break
-        case "html":
-          result = parseHTMLData(data)
-          break
-        case "markdown":
-          result = parseMarkdownData(data)
-          break
-        case "latex":
-          result = parseLaTeXData(data)
-          break
-        case "sql":
-          result = parseSQLData(data)
-          break
-        case "json":
-          result = parseJSONData(data)
-          break
-        case "yaml":
-          result = parseYAMLData(data)
-          break
-        case "xml":
-          result = parseXMLData(data)
-          break
-        case "ascii":
-          result = parseASCIIData(data)
-          break
-        default:
-          result = parseCSVData(data)
-      }
-      return result
-    } catch (error) {
-      toast({
-        title: t("messages.parseError"),
-        description: `${format.toUpperCase()}${t("messages.parseErrorDesc")}`,
-        variant: "destructive",
-      })
-      return []
+  for (const line of lines) {
+    if (line.includes("&") && line.includes("\\\\")) {
+      const cells = line
+        .replace(/\\\\/g, "")
+        .split("&")
+        .map((cell) => cell.trim())
+      result.push(cells)
     }
   }
 
-  return { parseInputData }
+  return result
+}
+
+const parseASCII = (data: string): string[][] => {
+  const lines = data.split("\n")
+  const result: string[][] = []
+
+  for (const line of lines) {
+    if (line.includes("|") && !line.match(/^[+\-|]+$/)) {
+      const cells = line
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter((cell, index, arr) => {
+          return !(index === 0 && cell === "") && !(index === arr.length - 1 && cell === "")
+        })
+      if (cells.length > 0) {
+        result.push(cells)
+      }
+    }
+  }
+
+  return result
+}
+
+const parseExcel = (data: string): string[][] => {
+  const lines = data.split("\n")
+  const result: string[][] = []
+
+  for (const line of lines) {
+    if (line.includes("CONCATENATE")) {
+      const match = line.match(/CONCATENATE$$([^)]+)$$/)
+      if (match) {
+        const values = match[1].split(",").map((val) => {
+          return val.trim().replace(/^"|"$/g, "")
+        })
+        result.push(values)
+      }
+    }
+  }
+
+  return result
 }

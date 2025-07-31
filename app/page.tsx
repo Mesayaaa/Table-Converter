@@ -1,74 +1,42 @@
 "use client"
 
-import { useState } from "react"
 import type React from "react"
 
-import { useRef } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
-import { Zap, FileText, X } from "lucide-react"
+import { Zap, FileText, X, Sparkles } from "lucide-react"
 
 import { Header } from "@/components/Header"
 import { StepBar } from "@/components/StepBar"
 import { InputPanel } from "@/components/InputPanel"
 import { HowToUse } from "@/components/HowToUse"
+import { PreviewPanel } from "@/components/PreviewPanel"
+import { OutputPanel } from "@/components/OutputPanel"
 
 import { useTableParsers } from "@/hooks/useTableParsers"
 import { useTableHistory } from "@/hooks/useTableHistory"
 import { useTableSelection } from "@/hooks/useTableSelection"
-import { useLanguage } from "@/hooks/useLanguage"
 
 import { sampleData } from "@/lib/constants/sampleData"
 import { formats } from "@/lib/constants/formats"
 import { generateOutput } from "@/lib/formatGenerators"
 
-// 他のコンポーネントは後続のファイルで定義
-import { PreviewPanel } from "@/components/PreviewPanel"
-import { OutputPanel } from "@/components/OutputPanel"
-
-type SortDirection = "asc" | "desc" | "none"
-type CellPosition = { row: number; col: number }
-type SelectionRange = { start: CellPosition; end: CellPosition }
-
-interface HistoryState {
-  tableData: string[][]
-  inputData: string
-  timestamp: number
-}
-
 export default function TableConverter() {
-  const { t } = useLanguage()
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedFormat, setSelectedFormat] = useState("csv")
   const [inputData, setInputData] = useState("")
   const [activeTab, setActiveTab] = useState("input")
-  const [filterText, setFilterText] = useState("")
   const [outputFormat, setOutputFormat] = useState("csv")
   const [tableData, setTableData] = useState<string[][]>([])
-  const [sortColumn, setSortColumn] = useState<number | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>("none")
-  const [draggedRowIndex, setDraggedRowIndex] = useState<number | null>(null)
-  const [draggedColumnIndex, setDraggedColumnIndex] = useState<number | null>(null)
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null)
-  const [editingCell, setEditingCell] = useState<CellPosition | null>(null)
-  const [editingValue, setEditingValue] = useState("")
-
-  // セル選択関連
-  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
-  const [selectionRange, setSelectionRange] = useState<SelectionRange | null>(null)
-  const [isSelecting, setIsSelecting] = useState(false)
-  const [lastClickedCell, setLastClickedCell] = useState<CellPosition | null>(null)
-
-  // テーブルリサイズ関連
-  const [tableScale, setTableScale] = useState(1)
+  const [isTableExpanded, setIsTableExpanded] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const [isTableExpanded, setIsTableExpanded] = useState(false)
 
   const { parseInputData } = useTableParsers()
   const { saveToHistory, handleUndo, handleRedo, clearHistory, historyIndex, history, isUndoRedoOperation } =
@@ -97,12 +65,6 @@ export default function TableConverter() {
     clearSelection()
     clearHistory()
     setIsTableExpanded(false)
-    setSortColumn(null)
-    setSortDirection("none")
-    setEditingCell(null)
-    setSelectedCells(new Set())
-    setSelectionRange(null)
-    setTableScale(1)
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,27 +105,43 @@ export default function TableConverter() {
     }
   }
 
-  // コピー機能
+  const handleLoadTable = (data: string[][]) => {
+    setTableData(data)
+    const newInputData = updateInputData(data)
+    setInputData(newInputData)
+    setCurrentStep(2)
+    setActiveTab("preview")
+    saveToHistory(data, newInputData)
+  }
+
+  const handleUseTemplate = (data: string[][]) => {
+    setTableData(data)
+    const newInputData = updateInputData(data)
+    setInputData(newInputData)
+    setCurrentStep(2)
+    setActiveTab("preview")
+    saveToHistory(data, newInputData)
+  }
+
   const handleCopy = async (format: string) => {
     const output = generateOutput(format, tableData)
     try {
       await navigator.clipboard.writeText(output)
       setCopiedFormat(format)
       toast({
-        title: t("messages.copied"),
-        description: `${formats.find((f) => f.value === format)?.label}${t("messages.copiedDesc")}`,
+        title: "Copied to Clipboard! ✨",
+        description: `${formats.find((f) => f.value === format)?.label} format has been copied successfully`,
       })
       setTimeout(() => setCopiedFormat(null), 2000)
     } catch (err) {
       toast({
-        title: t("messages.copyFailed"),
-        description: t("messages.copyFailedDesc"),
+        title: "Copy Failed",
+        description: "Failed to copy to clipboard. Please try again.",
         variant: "destructive",
       })
     }
   }
 
-  // ダウンロード機能
   const handleDownload = (format: string) => {
     const output = generateOutput(format, tableData)
     const formatInfo = formats.find((f) => f.value === format)
@@ -180,8 +158,8 @@ export default function TableConverter() {
     URL.revokeObjectURL(url)
 
     toast({
-      title: t("messages.downloaded"),
-      description: `${formatInfo.label}${t("messages.downloadedDesc")}`,
+      title: "File Downloaded! 🎉",
+      description: `${formatInfo.label} file has been downloaded successfully`,
     })
   }
 
@@ -191,17 +169,27 @@ export default function TableConverter() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        {/* Animated Background Elements */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+        {/* Enhanced Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-green-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-float"></div>
+          <div
+            className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-r from-pink-400/20 to-orange-400/20 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-green-400/20 to-blue-400/20 rounded-full blur-3xl animate-float"
+            style={{ animationDelay: "1s" }}
+          ></div>
+          <div
+            className="absolute top-32 right-1/4 w-64 h-64 bg-gradient-to-r from-purple-400/15 to-pink-400/15 rounded-full blur-2xl animate-float"
+            style={{ animationDelay: "3s" }}
+          ></div>
         </div>
 
-        <div className="relative z-10 p-4">
+        <div className="relative z-10 p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Header - 拡大時は隠す */}
+            {/* Header - Hide when expanded */}
             {!isTableExpanded && (
               <>
                 <Header />
@@ -209,52 +197,54 @@ export default function TableConverter() {
               </>
             )}
 
-            {/* 拡大時は全画面レイアウト、通常時は2カラムレイアウト */}
-            <div className={isTableExpanded ? "space-y-4" : "grid grid-cols-1 lg:grid-cols-2 gap-8"}>
+            {/* Main Layout */}
+            <div className={isTableExpanded ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-12"}>
               {/* Left Panel - Input/Preview */}
               <Card
-                className={`bg-white/90 backdrop-blur-sm border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 ${
-                  isTableExpanded ? "h-[calc(100vh-2rem)]" : ""
-                }`}
+                className={`card-enhanced hover-lift animate-slide-up ${isTableExpanded ? "h-[calc(100vh-2rem)]" : ""}`}
               >
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
-                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
+                <CardHeader className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b border-gray-100 pb-6">
+                  <CardTitle className="flex items-center gap-4 text-2xl font-black text-gray-800">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <FileText className="w-5 h-5 text-white" />
                     </div>
-                    {t("panels.input")}
+                    Data Input & Templates
                     {isTableExpanded && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTableExpand}
-                        className="ml-auto bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 hover:from-gray-600 hover:to-gray-700"
+                        className="ml-auto bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 hover:from-gray-600 hover:to-gray-700 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <X className="w-4 h-4 mr-2" />
-                        {t("buttons.close")}
+                        Close Fullscreen
                       </Button>
                     )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className={`p-6 ${isTableExpanded ? "h-[calc(100%-5rem)] overflow-hidden" : ""}`}>
+                <CardContent
+                  className={`p-8 ${isTableExpanded ? "h-[calc(100%-6rem)] overflow-hidden" : ""} custom-scrollbar`}
+                >
                   <Tabs value={activeTab} onValueChange={handleTabChange}>
-                    <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-xl">
+                    <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-gray-100 to-gray-50 p-1.5 rounded-2xl shadow-inner mb-8">
                       <TabsTrigger
                         value="input"
-                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                        className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 font-bold text-base py-3"
                       >
-                        {t("panels.inputTab")}
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Input Data
                       </TabsTrigger>
                       <TabsTrigger
                         value="preview"
                         disabled={!inputData}
-                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200 disabled:opacity-50"
+                        className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 disabled:opacity-50 font-bold text-base py-3"
                       >
-                        {t("panels.previewTab")}
+                        <Zap className="w-4 h-4 mr-2" />
+                        Preview & Edit
                       </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="input" className="space-y-6 mt-6">
+                    <TabsContent value="input" className="space-y-8 mt-0">
                       <InputPanel
                         selectedFormat={selectedFormat}
                         setSelectedFormat={setSelectedFormat}
@@ -263,12 +253,15 @@ export default function TableConverter() {
                         onSampleData={handleSampleData}
                         onClear={handleClear}
                         onFileUpload={handleFileUpload}
+                        onLoadTable={handleLoadTable}
+                        onUseTemplate={handleUseTemplate}
+                        tableData={tableData}
                       />
                     </TabsContent>
 
                     <TabsContent
                       value="preview"
-                      className={`space-y-6 mt-6 ${isTableExpanded ? "h-[calc(100%-4rem)]" : ""}`}
+                      className={`space-y-8 mt-0 ${isTableExpanded ? "h-[calc(100%-5rem)]" : ""}`}
                     >
                       <PreviewPanel
                         tableData={tableData}
@@ -304,18 +297,18 @@ export default function TableConverter() {
                 </CardContent>
               </Card>
 
-              {/* Right Panel - Output - 拡大時は隠す */}
+              {/* Right Panel - Output - Hide when expanded */}
               {!isTableExpanded && (
-                <Card className="bg-white/90 backdrop-blur-sm border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300">
-                  <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100">
-                    <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                        <Zap className="w-4 h-4 text-white" />
+                <Card className="card-enhanced hover-lift animate-slide-up" style={{ animationDelay: "0.2s" }}>
+                  <CardHeader className="bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 border-b border-gray-100 pb-6">
+                    <CardTitle className="flex items-center gap-4 text-2xl font-black text-gray-800">
+                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                        <Zap className="w-5 h-5 text-white" />
                       </div>
-                      {t("panels.output")}
+                      Export & Share
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6">
+                  <CardContent className="p-8 custom-scrollbar">
                     <OutputPanel
                       tableData={tableData}
                       outputFormat={outputFormat}
@@ -330,7 +323,7 @@ export default function TableConverter() {
               )}
             </div>
 
-            {/* How to Use - 拡大時は隠す */}
+            {/* How to Use - Hide when expanded */}
             {!isTableExpanded && <HowToUse />}
           </div>
         </div>
