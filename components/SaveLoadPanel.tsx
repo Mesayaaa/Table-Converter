@@ -2,26 +2,44 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Save, FolderOpen, Trash2, Calendar, FileText } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Save, Database, Trash2, Calendar, FileText, Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { generateId } from "@/lib/utils"
-import type { SavedTable } from "@/lib/types"
+
+interface SavedTable {
+  id: string
+  name: string
+  data: string[][]
+  savedAt: string
+  rowCount: number
+  columnCount: number
+}
 
 interface SaveLoadPanelProps {
   onLoadTable: (data: string[][]) => void
   tableData: string[][]
-  currentFormat: string
 }
 
-export const SaveLoadPanel = ({ onLoadTable, tableData, currentFormat }: SaveLoadPanelProps) => {
+export const SaveLoadPanel = ({ onLoadTable, tableData }: SaveLoadPanelProps) => {
   const [savedTables, setSavedTables] = useState<SavedTable[]>([])
   const [tableName, setTableName] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
-  // Load saved tables from localStorage
+  // Load saved tables from localStorage on component mount
   useEffect(() => {
     const saved = localStorage.getItem("savedTables")
     if (saved) {
@@ -33,71 +51,70 @@ export const SaveLoadPanel = ({ onLoadTable, tableData, currentFormat }: SaveLoa
     }
   }, [])
 
-  // Save tables to localStorage
-  const saveTablesToStorage = (tables: SavedTable[]) => {
-    localStorage.setItem("savedTables", JSON.stringify(tables))
-    setSavedTables(tables)
-  }
+  // Save tables to localStorage whenever savedTables changes
+  useEffect(() => {
+    localStorage.setItem("savedTables", JSON.stringify(savedTables))
+  }, [savedTables])
 
   const handleSaveTable = () => {
-    if (!tableName.trim()) {
+    if (!tableData || tableData.length === 0) {
       toast({
-        title: "Name Required",
-        description: "Please enter a name for your table",
+        title: "No Data to Save",
+        description: "Please input some table data before saving.",
         variant: "destructive",
       })
       return
     }
 
-    if (tableData.length === 0) {
+    if (!tableName.trim()) {
       toast({
-        title: "No Data",
-        description: "No table data to save",
+        title: "Name Required",
+        description: "Please enter a name for your table.",
         variant: "destructive",
       })
       return
     }
 
     const newTable: SavedTable = {
-      id: generateId(),
+      id: Date.now().toString(),
       name: tableName.trim(),
-      data: JSON.parse(JSON.stringify(tableData)),
-      format: currentFormat,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      data: tableData,
+      savedAt: new Date().toISOString(),
+      rowCount: tableData.length,
+      columnCount: tableData[0]?.length || 0,
     }
 
-    const updatedTables = [newTable, ...savedTables]
-    saveTablesToStorage(updatedTables)
+    setSavedTables((prev) => [newTable, ...prev])
     setTableName("")
 
     toast({
-      title: "Table Saved",
-      description: `Table "${newTable.name}" has been saved successfully`,
+      title: "Table Saved! 💾",
+      description: `"${newTable.name}" has been saved successfully.`,
     })
   }
 
   const handleLoadTable = (table: SavedTable) => {
     onLoadTable(table.data)
     toast({
-      title: "Table Loaded",
-      description: `Table "${table.name}" has been loaded successfully`,
+      title: "Table Loaded! 📊",
+      description: `"${table.name}" has been loaded successfully.`,
     })
   }
 
-  const handleDeleteTable = (tableId: string) => {
-    const tableToDelete = savedTables.find((t) => t.id === tableId)
-    const updatedTables = savedTables.filter((t) => t.id !== tableId)
-    saveTablesToStorage(updatedTables)
+  const handleDeleteTable = (id: string) => {
+    const table = savedTables.find((t) => t.id === id)
+    setSavedTables((prev) => prev.filter((t) => t.id !== id))
 
     toast({
       title: "Table Deleted",
-      description: `Table "${tableToDelete?.name}" has been deleted`,
+      description: `"${table?.name}" has been deleted.`,
     })
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
+  const filteredTables = savedTables.filter((table) => table.name.toLowerCase().includes(searchQuery.toLowerCase()))
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -108,8 +125,8 @@ export const SaveLoadPanel = ({ onLoadTable, tableData, currentFormat }: SaveLoa
 
   return (
     <div className="space-y-6">
-      {/* Save Section */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      {/* Save Current Table */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Save className="w-5 h-5" />
@@ -117,90 +134,117 @@ export const SaveLoadPanel = ({ onLoadTable, tableData, currentFormat }: SaveLoa
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Input
               placeholder="Enter table name..."
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
               className="flex-1"
-              onKeyDown={(e) => e.key === "Enter" && handleSaveTable()}
             />
             <Button
               onClick={handleSaveTable}
-              disabled={!tableName.trim() || tableData.length === 0}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0"
+              disabled={!tableData || tableData.length === 0}
+              className="w-full sm:w-auto"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save
+              Save Table
             </Button>
           </div>
-          {tableData.length > 0 && (
-            <div className="text-sm text-gray-600">
-              Current table: {tableData.length - 1} rows, {tableData[0]?.length || 0} columns
+          {tableData && tableData.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Current table: {tableData.length} rows × {tableData[0]?.length || 0} columns
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Load Section */}
+      {/* Saved Tables */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FolderOpen className="w-5 h-5" />
-            Saved Tables ({savedTables.length})
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Database className="w-5 h-5" />
+              Saved Tables ({savedTables.length})
+            </CardTitle>
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search tables..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full sm:w-64"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {savedTables.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <div className="text-lg font-medium mb-2">No saved tables</div>
-              <div className="text-sm">Save your current table to see it here</div>
+          {filteredTables.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {savedTables.length === 0 ? (
+                <div className="space-y-2">
+                  <Database className="w-12 h-12 mx-auto opacity-50" />
+                  <p>No saved tables yet</p>
+                  <p className="text-sm">Save your current table to access it later</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Search className="w-12 h-12 mx-auto opacity-50" />
+                  <p>No tables match your search</p>
+                  <p className="text-sm">Try a different search term</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-3">
-              {savedTables.map((table) => (
-                <div
-                  key={table.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-800">{table.name}</h3>
-                      <Badge variant="secondary" className="text-xs">
-                        {table.format.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <FileText className="w-3 h-3" />
-                        {table.data.length - 1} rows, {table.data[0]?.length || 0} columns
+              {filteredTables.map((table) => (
+                <Card key={table.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                          <h3 className="font-semibold truncate">{table.name}</h3>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {table.rowCount} rows
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {table.columnCount} columns
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span className="text-xs">{formatDate(table.savedAt)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(table.createdAt)}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button onClick={() => handleLoadTable(table)} size="sm" className="w-full sm:w-auto">
+                          Load
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Table</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{table.name}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteTable(table.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => handleLoadTable(table)}
-                      size="sm"
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
-                    >
-                      <FolderOpen className="w-4 h-4 mr-2" />
-                      Load
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteTable(table.id)}
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

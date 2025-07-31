@@ -94,17 +94,19 @@ export const StepBar = ({ currentStep }: StepBarProps) => {
                 </div>
               </div>
 
-              {/* Step Content */}
-              <div className="text-center max-w-xs">
+              {/* Step Content - Centered vertically */}
+              <div className="text-center max-w-xs flex flex-col items-center justify-center">
                 <h4
                   className={cn(
-                    "font-bold text-lg mb-2 transition-all duration-300",
+                    "font-bold text-lg mb-2 transition-all duration-300 flex items-center justify-center",
                     currentStep >= step.number ? "text-gray-900" : "text-gray-500",
                   )}
                 >
                   {step.title}
                 </h4>
-                <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+                <p className="text-sm text-gray-500 leading-relaxed flex items-center justify-center text-center">
+                  {step.description}
+                </p>
 
                 {/* Active step indicator */}
                 {currentStep === step.number && (
