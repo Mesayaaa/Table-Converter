@@ -91,6 +91,21 @@
   }
 }
 
+/* Force light theme always - override any dark mode attempts */
+html.dark,
+html[data-theme="dark"],
+.dark,
+[data-theme="dark"] {
+  color-scheme: light !important;
+}
+
+html.dark *,
+html[data-theme="dark"] *,
+.dark *,
+[data-theme="dark"] * {
+  color-scheme: light !important;
+}
+
 /* Custom animations */
 @keyframes float {
   0%,
